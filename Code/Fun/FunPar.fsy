@@ -27,6 +27,8 @@
 %start Main
 %type <Absyn.expr> Main Expr AtExpr Const
 %type <Absyn.expr> AppExpr
+%type <string list> Names
+%type <Absyn.expr list> AtExprs
 
 %%
 
@@ -52,17 +54,27 @@ Expr:
   | Expr LE    Expr                     { Prim("<=", $1, $3)     }
 ;
 
+Names:
+    NAME                                { [$1] }
+  | NAME Names                          { $1 :: $2 }
+;
+
 AtExpr:
     Const                               { $1                     }
   | NAME                                { Var $1                 }
   | LET NAME EQ Expr IN Expr END        { Let($2, $4, $6)        }
-  | LET NAME NAME EQ Expr IN Expr END   { Letfun($2, $3, $5, $7) }
+  | LET NAME Names EQ Expr IN Expr END   { Letfun($2, $3, $5, $7) }
   | LPAR Expr RPAR                      { $2                     }
 ;
 
+AtExprs:
+    AtExpr                              { [$1] }
+  | AtExpr AtExprs                      { $1 :: $2}
+;
+
 AppExpr:
-    AtExpr AtExpr                       { Call($1, $2)           }
-  | AppExpr AtExpr                      { Call($1, $2)           }
+    AtExpr AtExprs                       { Call($1, $2)           }
+  | AppExpr AtExprs                      { Call($1, $2)           }
 ;
 
 Const:
