@@ -1,5 +1,7 @@
 # handin4-PAD
 
+dotnet fsi -r FsLexYacc.Runtime.dll Fun.fs Absyn.fs FunPar.fs FunLex.fs Parse.fs
+
 ## PLC
 
 ### 4.1
