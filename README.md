@@ -38,20 +38,7 @@ All functions return the expected output.
 
 ### 4.3
 
-For simplicity, the current implementation of the functional language
-requires all functions to take exactly one argument. This seriously limits the programs
-that can be written in the language (at least it limits what that can be written without
-excessive cleverness and complications).
-76 4 A First-Order Functional Language
-Modify the language to allow functions to take one or more arguments. Start by
-modifying the abstract syntax in Absyn.fs to permit a list of parameter names in
-Letfun and a list of argument expressions in Call.
-Then modify the eval interpreter in file Fun.fs to work for the new abstract
-syntax. You must modify the closure representation to accommodate a list of para-
-meters. Also, modify the Letfun and Call clauses of the interpreter. You will
-need a way to zip together a list of variable names and a list of variable values, to get
-an environment in the form of an association list; so function List.zip might be
-useful.
+The Following Code is from Fun.fs
 
 ```fsharp
 type expr = 
@@ -61,7 +48,7 @@ type expr =
   | Let of string * expr * expr
   | Prim of string * expr * expr
   | If of expr * expr * expr
-  | Letfun of string * string * expr list * expr    //<NEW>
+  | Letfun of string * string list * expr * expr    //<NEW>
   | Call of expr * expr list
 
   type value = 
@@ -111,7 +98,9 @@ type expr =
 
 ### 4.4
 
-```
+The following code is from FunPar.fsy
+
+```text
 AtExpr:
     Const                               { $1                     }
   | NAME                                { Var $1                 }
@@ -132,3 +121,77 @@ AtExpr:
 ```
 
 ### 4.5
+
+FunPar.fsy
+
+```text
+%token ELSE END FALSE IF IN LET NOT THEN TRUE
+%token PLUS MINUS TIMES DIV MOD
+%token EQ NE GT LT GE LE AND OR     //<NEW>
+%token LPAR RPAR 
+%token EOF
+
+...
+
+%left OR      //<NEW>           /* lowest precedence  */
+%left AND     //<NEW>
+%left ELSE              
+%left EQ NE 
+%left GT LT GE LE
+%left PLUS MINUS
+%left TIMES DIV MOD 
+%nonassoc NOT                   /* highest precedence  */
+
+...
+
+Expr:
+    AtExpr                              { $1                     }
+  | AppExpr                             { $1                     }
+  | IF Expr THEN Expr ELSE Expr         { If($2, $4, $6)         }
+  | MINUS Expr                          { Prim("-", CstI 0, $2)  }
+  | Expr PLUS  Expr                     { Prim("+",  $1, $3)     }
+  | Expr MINUS Expr                     { Prim("-",  $1, $3)     }
+  | Expr TIMES Expr                     { Prim("*",  $1, $3)     }
+  | Expr DIV   Expr                     { Prim("/",  $1, $3)     } 
+  | Expr MOD   Expr                     { Prim("%",  $1, $3)     }
+  | Expr EQ    Expr                     { Prim("=",  $1, $3)     }
+  | Expr NE    Expr                     { Prim("<>", $1, $3)     }
+  | Expr GT    Expr                     { Prim(">",  $1, $3)     }
+  | Expr LT    Expr                     { Prim("<",  $1, $3)     }
+  | Expr GE    Expr                     { Prim(">=", $1, $3)     }
+  | Expr LE    Expr                     { Prim("<=", $1, $3)     }
+  | Expr AND   Expr                     { If($1, $2, FALSE)      }  //<NEW>
+  | Expr OR    Expr                     { If($1, TRUE, $2)       }  //<NEW>
+;
+```
+
+FunLex.fsl
+
+```text
+rule Token = parse
+  | [' ' '\t' '\r'] { Token lexbuf }
+  | '\n'            { lexbuf.EndPos <- lexbuf.EndPos.NextLine; Token lexbuf }
+  | ['0'-'9']+      { CSTINT (System.Int32.Parse (lexemeAsString lexbuf)) }
+  | ['a'-'z''A'-'Z']['a'-'z''A'-'Z''0'-'9']*
+                    { keyword (lexemeAsString lexbuf) }
+  | "(*"            { commentStart := lexbuf.StartPos;
+                      commentDepth := 1; 
+                      SkipComment lexbuf; Token lexbuf }
+  | '='             { EQ }
+  | "<>"            { NE }
+  | '>'             { GT }
+  | '<'             { LT }
+  | ">="            { GE }
+  | "<="            { LE }
+  | "&&"            { AND }         //<NEW>
+  | "||"            { OR }          //<NEW>
+  | '+'             { PLUS }                     
+  | '-'             { MINUS }                     
+  | '*'             { TIMES }                     
+  | '/'             { DIV }                     
+  | '%'             { MOD }
+  | '('             { LPAR }
+  | ')'             { RPAR }
+  | eof             { EOF }
+  | _               { failwith "Lexer error: illegal symbol" }
+```
