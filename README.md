@@ -105,12 +105,23 @@ The Following Code is from Fun.fs
 The following code is from FunPar.fsy
 
 ```text
+%start Main
+%type <Absyn.expr> Main Expr AtExpr Const
+%type <Absyn.expr> AppExpr
+%type <string list> Names         <NEW>
+%type <Absyn.expr list> AtExprs   <NEW>
+
 AtExpr:
     Const                               { $1                     }
   | NAME                                { Var $1                 }
   | LET NAME EQ Expr IN Expr END        { Let($2, $4, $6)        }
   | LET NAME Names EQ Expr IN Expr END   { Letfun($2, $3, $5, $7) } <NEW>
   | LPAR Expr RPAR                      { $2                     }
+;
+
+Names:                                                <NEW>
+    NAME                                { [$1] }      <NEW>
+  | NAME Names                          { $1 :: $2 }  <NEW>
 ;
 
   AtExprs:
