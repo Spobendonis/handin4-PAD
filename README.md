@@ -40,7 +40,7 @@ All functions return the expected output.
 
 The Following Code is from Absyn.fs
 
-````fsharp
+```fsharp
 type expr = 
   | CstI of int
   | CstB of bool
