@@ -38,9 +38,9 @@ All functions return the expected output.
 
 ### 4.3
 
-The Following Code is from Fun.fs
+The Following Code is from Absyn.fs
 
-```fsharp
+````fsharp
 type expr = 
   | CstI of int
   | CstB of bool
@@ -50,7 +50,11 @@ type expr =
   | If of expr * expr * expr
   | Letfun of string * string list * expr * expr    //<NEW>
   | Call of expr * expr list
+```
 
+The Following Code is from Fun.fs
+
+```fsharp
   type value = 
   | Int of int
   | Closure of string * string list * expr * value env  //<NEW>
@@ -162,6 +166,11 @@ Expr:
   | Expr LE    Expr                     { Prim("<=", $1, $3)     }
   | Expr AND   Expr                     { If($1, $2, FALSE)      }  //<NEW>
   | Expr OR    Expr                     { If($1, TRUE, $2)       }  //<NEW>
+;
+
+AppExpr:
+    AtExpr AtExpr                       { Call($1, $2)           }
+  | AppExpr AtExpr                      { Call($1, $2)           } //<REMOVED>
 ;
 ```
 
